@@ -25,9 +25,15 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
     )(UserData.apply)(UserData.unapply)
   )
 
-  def index = Action {
-    val uf = UserData("politics");
-    Ok(views.html.index(userForm.fill(uf)))
+  def index = Action { implicit request =>
+    if(request.session.isEmpty)
+      {
+        Redirect("/login");
+      }
+    else
+      {
+        Ok(views.html.index(userForm.fill(UserData("politics"))))
+      }
   }
 
   def userPost = Action.async(parse.form(userForm)) { implicit request =>

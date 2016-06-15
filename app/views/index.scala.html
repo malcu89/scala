@@ -1,8 +1,10 @@
 @(userForm: Form[UserData])(implicit messages: Messages)
 
-@main("Welcome to Play") {
-        @helper.form(action = routes.RedditController.userPost()) {
-            @helper.inputText(userForm("tag"))
-            <input type="submit" value="Submit">
+@main("Reddit RSS with Twitter"){
+    @helper.form(action = routes.RedditController.userPost()){
+        @helper.inputText(userForm("tag"))
+        <input type="submit" value="Submit">
     }
 }
+
+
