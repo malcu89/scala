@@ -1,5 +1,18 @@
-@(content: String)
+@(redditsForm: Form[RedditsFormData])(implicit messages: Messages)
 
-@main("Welcome to Play") {
-    @content
+@import helper._
+
+@main("Select reddits") {
+    @form(action = routes.RedditController.pickedRedditsPost()) {
+        @repeat(redditsForm("redditsList"), min = 1) { redditField =>
+            @inputText(redditField("id"), 'type -> "hidden")
+            @checkbox(
+                redditField("checked"),
+                'name -> "test",
+                '_label -> None,
+                '_text -> "Select",
+                '_showConstraints -> false)
+        }
+        <input type="submit" value="Submit">
+    }
 }

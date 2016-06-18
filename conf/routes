@@ -7,5 +7,8 @@ GET     /                           controllers.RedditController.index
 POST    /                           controllers.RedditController.userPost
 GET     /login                      controllers.TwitterController.authenticate
 
+GET     /reddits                    controllers.RedditController.reddits
+POST    /reddits                    controllers.RedditController.pickedRedditsPost
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
