@@ -22,8 +22,8 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
 
   val userForm = Form(
     mapping(
-      "tag" -> text
-    )(UserData.apply)(UserData.unapply)
+      "subreddit" -> text
+    )(SelectSubredditData.apply)(SelectSubredditData.unapply)
   )
 
   val redditsForm: Form[RedditsFormData] = Form(
@@ -48,12 +48,12 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
       }
     else
       {
-        Ok(views.html.index(userForm.fill(UserData("politics"))))
+        Ok(views.html.index(userForm.fill(SelectSubredditData("politics"))))
       }
   }
 
   var jsonBody : String = _
-  var costam : List[RedditJsonData] = _
+  var redditsJson : List[RedditJsonData] = _
   val redditsDataReadsBuilder = (
     (__ \ "data" \ "ups").read[Int] and
       (__ \ "data" \ "thumbnail").read[String] and
@@ -61,8 +61,8 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
       (__ \ "data" \ "title").read[String]
     )(RedditJsonData.apply _)
 
-  def userPost = Action.async(parse.form(userForm)) { implicit request =>
-    ws.url("https://www.reddit.com/r/" + request.body.tag + "/top.json").get().map(response => {
+  def postSubreddit = Action.async(parse.form(userForm)) { implicit request =>
+    ws.url("https://www.reddit.com/r/" + request.body.subreddit + "/top.json").get().map(response => {
       jsonBody = response.body
       Redirect(routes.RedditController.reddits())})
   }
@@ -71,10 +71,10 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
     val jsonVal: JsValue = Json.parse(jsonBody)
     val redditsEntries: List[JsValue] = (jsonVal \ "data" \ "children").as[List[JsValue]]
 
-    costam = redditsEntries.map(jsval => jsval.as(redditsDataReadsBuilder))
+    redditsJson = redditsEntries.map(jsval => jsval.as(redditsDataReadsBuilder))
 
     Ok(views.html.getReddit(redditsForm.fill(
-      RedditsFormData(List.fill(redditsEntries.length)(RedditFormData(0, false))))))
+      RedditsFormData(List.fill(redditsEntries.length)(RedditFormData(0, false)))), redditsJson))
     }
   }
 
@@ -86,19 +86,15 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
         Ok(views.html.main("asd")(Html("error")))
       },
       goodOne => {
-        var str: String = ""
-        for(i <- 0 to goodOne.redditsList.length - 1){
-          if(goodOne.redditsList(i).checked){
-            str = str.concat(costam(i).title)
-          }
-        }
-        Ok(views.html.main("asd")(Html(str)))
+        val pickedToTwitter: List[RedditJsonData] = redditsJson.filter(el => goodOne.redditsList(redditsJson.indexOf(el)).checked)
+
+        Ok(views.html.main("asd")(Html(pickedToTwitter.mkString)))
       }
     )
   }
 }
 
-case class UserData(tag: String)
+case class SelectSubredditData(subreddit: String)
 case class RedditsFormData(redditsList: Seq[RedditFormData])
 case class RedditFormData(id: Int, checked: Boolean)
 case class RedditJsonData(ups: Int, thumbnail: String, url: String, title: String)

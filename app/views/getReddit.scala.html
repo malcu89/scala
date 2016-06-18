@@ -1,18 +1,29 @@
-@(redditsForm: Form[RedditsFormData])(implicit messages: Messages)
+@(redditsForm: Form[RedditsFormData], redditsData: List[RedditJsonData])(implicit messages: Messages)
 
 @import helper._
 
 @main("Select reddits") {
-    @form(action = routes.RedditController.pickedRedditsPost()) {
-        @repeat(redditsForm("redditsList"), min = 1) { redditField =>
-            @inputText(redditField("id"), 'type -> "hidden")
-            @checkbox(
-                redditField("checked"),
-                'name -> "test",
-                '_label -> None,
-                '_text -> "Select",
-                '_showConstraints -> false)
-        }
-        <input type="submit" value="Submit">
-    }
+    <form action="/reddits" method="POST">
+        <table>
+            <tbody>
+            @for(rd <- redditsData){
+                @defining(redditsData.indexOf(rd)){ num =>
+                    <tr>
+                        <td style="width: 300px;" rowspan="2"><br /><img src="@rd.thumbnail" alt="" width="300" height="225" /></td>
+                        <td>@rd.title</td>
+                    </tr>
+                    <tr>
+                        <td>@rd.url</td>
+                    </tr>
+                    <tr>
+                        <td><input type="hidden" id="redditsList_@(num)_id" name="redditsList[@num].id" value="0">
+                            <input type="checkbox" id="redditsList_@(num)_checked" name="redditsList[@num].checked" value="true"></td>
+                        <td>@rd.ups</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+        <input type="submit" value="Submit Selected">
+    </form>
 }

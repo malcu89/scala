@@ -1,8 +1,8 @@
-@(userForm: Form[UserData])(implicit messages: Messages)
+@(subredditForm: Form[SelectSubredditData])(implicit messages: Messages)
 
 @main("Reddit RSS with Twitter"){
-    @helper.form(action = routes.RedditController.userPost()){
-        @helper.inputText(userForm("tag"))
+    @helper.form(action = routes.RedditController.postSubreddit){
+        @helper.inputText(subredditForm("subreddit"))
         <input type="submit" value="Submit">
     }
 }

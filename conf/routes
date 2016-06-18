@@ -4,7 +4,8 @@
 
 # An example controller showing a sample home page
 GET     /                           controllers.RedditController.index
-POST    /                           controllers.RedditController.userPost
+POST    /                           controllers.RedditController.postSubreddit
+
 GET     /login                      controllers.TwitterController.authenticate
 
 GET     /reddits                    controllers.RedditController.reddits
