@@ -10,11 +10,13 @@ import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 import play.api.libs.ws._
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json.Json
+import play.twirl.api.Html
 
 case class TwitterLoginData(login: String, password: String)
 
 @Singleton
-class TwitterController @Inject() extends Controller {
+class TwitterController @Inject()(ws: WSClient) extends Controller {
   val KEY = ConsumerKey("Y9tC3nXQB02sABews7WXo5ndk", "vmCC7kOIyWe6PxaFTdAqOrO57YdDrWrx5sEvTcF6OG2UwgSrLC")
 
   val TWITTER = OAuth(ServiceInfo(
@@ -52,5 +54,19 @@ class TwitterController @Inject() extends Controller {
     } yield {
       RequestToken(token, secret)
     }
+  }
+
+  def send = Action.async { request =>
+
+    val data = Map(
+      "status" -> "asf"
+    )
+
+    var rt : RequestToken = new RequestToken(request.session.get("token").get, request.session.get("secret").get)
+
+    ws.url("https://api.twitter.com/1.1/statuses/update.json?status=http://blog.mamisoft.pl/index.php/en/java/13-play-framework/23-play-framework-scala-twitter-oauth-2").sign(OAuthCalculator(KEY, rt)).post("ignored").map(response => {
+      Ok(views.html.main("asd")(Html(response.body)))
+      //Redirect(response.body)
+    })
   }
 }

@@ -13,6 +13,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.twirl.api.Html
+import play.api.libs.oauth._
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
@@ -62,7 +63,7 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
     )(RedditJsonData.apply _)
 
   def postSubreddit = Action.async(parse.form(userForm)) { implicit request =>
-    ws.url("https://www.reddit.com/r/" + request.body.subreddit + "/top.json").get().map(response => {
+   ws.url("https://www.reddit.com/r/" + request.body.subreddit + "/top.json").get().map(response => {
       jsonBody = response.body
       Redirect(routes.RedditController.reddits())})
   }
@@ -78,6 +79,7 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
     }
   }
 
+  var pickedToTwitter : List[RedditJsonData] = _
   def pickedRedditsPost = Action { implicit  request =>
 
     redditsForm.bindFromRequest.fold(
@@ -86,9 +88,10 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
         Ok(views.html.main("asd")(Html("error")))
       },
       goodOne => {
-        val pickedToTwitter: List[RedditJsonData] = redditsJson.filter(el => goodOne.redditsList(redditsJson.indexOf(el)).checked)
+        pickedToTwitter = redditsJson.filter(el => goodOne.redditsList(redditsJson.indexOf(el)).checked)
 
-        Ok(views.html.main("asd")(Html(pickedToTwitter.mkString)))
+        //Ok(views.html.main("asd")(Html(pickedToTwitter.mkString)))
+        Redirect("/redditsSend")
       }
     )
   }
