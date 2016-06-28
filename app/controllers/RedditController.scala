@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject._
-
+import play.api.cache._
 import play.api.Logger
 import play.api.mvc._
 import play.api.data._
@@ -19,7 +19,7 @@ import play.api.libs.oauth._
  * application's home page.
  */
 @Singleton
-class RedditController @Inject()(ws: WSClient) extends Controller {
+class RedditController @Inject()(ws: WSClient, @NamedCache("session-cache") sessionCache: CacheApi ) extends Controller {
 
   val userForm = Form(
     mapping(
@@ -88,13 +88,14 @@ class RedditController @Inject()(ws: WSClient) extends Controller {
         Ok(views.html.main("asd")(Html("error")))
       },
       goodOne => {
-        pickedToTwitter = redditsJson.filter(el => goodOne.redditsList(redditsJson.indexOf(el)).checked)
+        sessionCache.set("1",pickedToTwitter = redditsJson.filter(el => goodOne.redditsList(redditsJson.indexOf(el)).checked))
 
         //Ok(views.html.main("asd")(Html(pickedToTwitter.mkString)))
         Redirect("/redditsSend")
       }
     )
   }
+  sessionCache.set("1",pickedToTwitter)
 }
 
 case class SelectSubredditData(subreddit: String)

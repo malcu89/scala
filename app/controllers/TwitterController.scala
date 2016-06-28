@@ -1,7 +1,8 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
-
+import play.api.cache
+import play.api.cache._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.oauth._
@@ -16,7 +17,7 @@ import play.twirl.api.Html
 case class TwitterLoginData(login: String, password: String)
 
 @Singleton
-class TwitterController @Inject()(ws: WSClient) extends Controller {
+class TwitterController @Inject()(ws: WSClient,@NamedCache("session-cache") sessionCache: CacheApi) extends Controller {
   val KEY = ConsumerKey("Y9tC3nXQB02sABews7WXo5ndk", "vmCC7kOIyWe6PxaFTdAqOrO57YdDrWrx5sEvTcF6OG2UwgSrLC")
 
   val TWITTER = OAuth(ServiceInfo(
@@ -55,18 +56,28 @@ class TwitterController @Inject()(ws: WSClient) extends Controller {
       RequestToken(token, secret)
     }
   }
+  var i = 0
 
-  def send = Action.async { request =>
 
-    val data = Map(
-      "status" -> "asf"
-    )
+  val tweet : Option[List[RedditJsonData]] = sessionCache.get[List[RedditJsonData]]("1")
+//tweet.get(0).url
 
-    var rt : RequestToken = new RequestToken(request.session.get("token").get, request.session.get("secret").get)
+    def send = Action.async { request =>
+      //for(i <- 0 to tweet.toList.length)  {
+      val data = Map(
+        "status" -> "asf"
+      )
 
-    ws.url("https://api.twitter.com/1.1/statuses/update.json?status=http://blog.mamisoft.pl/index.php/en/java/13-play-framework/23-play-framework-scala-twitter-oauth-2").sign(OAuthCalculator(KEY, rt)).post("ignored").map(response => {
-      Ok(views.html.main("asd")(Html(response.body)))
-      //Redirect(response.body)
-    })
+      var rt: RequestToken = new RequestToken(request.session.get("token").get, request.session.get("secret").get)
+
+      ws.url("https://api.twitter.com/1.1/statuses/update.json?status=" + tweet.get(0).url).sign(OAuthCalculator(KEY, rt)).post("ignored").map(response => {
+        Ok(views.html.main("asd")(Html(response.body)))
+        //Redirect(response.body)
+      })
+    //}
   }
+
+//  object SomeOtherClass
+
+
 }
