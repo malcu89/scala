@@ -14,10 +14,12 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import play.twirl.api.Html
 
+import scala.concurrent.Future
+
 case class TwitterLoginData(login: String, password: String)
 
 @Singleton
-class TwitterController @Inject()(ws: WSClient,@NamedCache("session-cache") sessionCache: CacheApi) extends Controller {
+class TwitterController @Inject()(ws: WSClient, @NamedCache("session-cache") sessionCache: CacheApi) extends Controller {
   val KEY = ConsumerKey("Y9tC3nXQB02sABews7WXo5ndk", "vmCC7kOIyWe6PxaFTdAqOrO57YdDrWrx5sEvTcF6OG2UwgSrLC")
 
   val TWITTER = OAuth(ServiceInfo(
@@ -28,7 +30,7 @@ class TwitterController @Inject()(ws: WSClient,@NamedCache("session-cache") sess
 
   def authenticate = Action { request =>
 
-      request.queryString.get("oauth_verifier").flatMap(_.headOption).map { verifier =>
+    request.queryString.get("oauth_verifier").flatMap(_.headOption).map { verifier =>
       val tokenPair = sessionTokenPair(request).get
       // We got the verifier; now get the access token, store it and back to index
       TWITTER.retrieveAccessToken(tokenPair, verifier) match {
@@ -56,28 +58,19 @@ class TwitterController @Inject()(ws: WSClient,@NamedCache("session-cache") sess
       RequestToken(token, secret)
     }
   }
-  var i = 0
 
+  def send = Action.async { request =>
 
-  val tweet : Option[List[RedditJsonData]] = sessionCache.get[List[RedditJsonData]]("1")
-//tweet.get(0).url
+    var rt: RequestToken = new RequestToken(request.session.get("token").get, request.session.get("secret").get)
 
-    def send = Action.async { request =>
-      //for(i <- 0 to tweet.toList.length)  {
-      val data = Map(
-        "status" -> "asf"
-      )
+    sessionCache.get[List[RedditJsonData]]("pickedToTwitter") match {
+      case Some(pttw) => {
+        val posts = pttw.map(tweet => ws.url("https://api.twitter.com/1.1/statuses/update.json?status=" + tweet.url)
+          .sign(OAuthCalculator(KEY, rt))
+          .post("ignored"))
 
-      var rt: RequestToken = new RequestToken(request.session.get("token").get, request.session.get("secret").get)
-
-      ws.url("https://api.twitter.com/1.1/statuses/update.json?status=" + tweet.get(0).url).sign(OAuthCalculator(KEY, rt)).post("ignored").map(response => {
-        Ok(views.html.main("asd")(Html(response.body)))
-        //Redirect(response.body)
-      })
-    //}
+        Future.sequence(posts).map(response => Redirect(routes.RedditController.index))
+      }
+    }
   }
-
-//  object SomeOtherClass
-
-
 }

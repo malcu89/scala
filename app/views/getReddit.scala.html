@@ -4,6 +4,7 @@
 
 @main("Select reddits") {
     <form action="/reddits" method="POST">
+        <input type="submit" value="Submit Selected">
         <table>
             <tbody>
             @for(rd <- redditsData){
@@ -37,6 +38,5 @@
             }
             </tbody>
         </table>
-        <input type="submit" value="Submit Selected">
     </form>
 }

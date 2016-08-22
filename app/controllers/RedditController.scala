@@ -79,7 +79,6 @@ class RedditController @Inject()(ws: WSClient, @NamedCache("session-cache") sess
     }
   }
 
-  var pickedToTwitter : List[RedditJsonData] = _
   def pickedRedditsPost = Action { implicit  request =>
 
     redditsForm.bindFromRequest.fold(
@@ -88,14 +87,11 @@ class RedditController @Inject()(ws: WSClient, @NamedCache("session-cache") sess
         Ok(views.html.main("asd")(Html("error")))
       },
       goodOne => {
-        sessionCache.set("1",pickedToTwitter = redditsJson.filter(el => goodOne.redditsList(redditsJson.indexOf(el)).checked))
-
-        //Ok(views.html.main("asd")(Html(pickedToTwitter.mkString)))
+        sessionCache.set("pickedToTwitter", redditsJson.filter(el => goodOne.redditsList(redditsJson.indexOf(el)).checked))
         Redirect("/redditsSend")
       }
     )
   }
-  sessionCache.set("1",pickedToTwitter)
 }
 
 case class SelectSubredditData(subreddit: String)
